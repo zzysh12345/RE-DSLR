@@ -277,7 +277,7 @@ def adj_masking(adj, handled, device):
     
 def edge_masking(edge_index, handled, device):
     num_nodes = edge_index.max().item()+1
-    node_mask = torch.zeros(num_nodes, dtype=torch.bool)
+    node_mask = torch.zeros(num_nodes, dtype=torch.bool).to(edge_index.device)
     for node in handled:
         node_mask[node] = True
     mask = node_mask[edge_index[0]] & node_mask[edge_index[1]]

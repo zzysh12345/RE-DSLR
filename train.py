@@ -92,7 +92,8 @@ def main(args):
             if args.model == "GAT":
                 model_lp = GAT(F, H, C, args.n_heads, task, args.dropout).to(device)
         elif task != 0:
-            model_lp.load_state_dict(torch.load('checkpoints/%d.pt' %(task-1)))
+            # model_lp.load_state_dict(torch.load('checkpoints/%d.pt' %(task-1)))
+            model_lp.load_state_dict(torch.load(f'checkpoints/{args.dataset}_{task-1}.pt'))
             if args.model == "GAT":
                 weight_expand = torch.rand(C,H*args.n_heads).to(device)
                 bias_expand = torch.rand(C).to(device)
@@ -190,7 +191,8 @@ def main(args):
             accs.append(test_acc)
             
 
-        torch.save(network.state_dict(), 'checkpoints/%d.pt' %(task))
+        # torch.save(network.state_dict(), 'checkpoints/%d.pt' %(task))
+        torch.save(network.state_dict(), f'checkpoints/{args.dataset}_{task}.pt')
 
 
 
@@ -262,9 +264,13 @@ if __name__  == "__main__":
     parser.add_argument('--beta', type=float, default=0.1, help='weight in loss function')
     parser.add_argument('--threshold', type=float, default=0.99, help='Link prediction threshold')
     parser.add_argument('--forget', type=str, default='class', choices=['task', 'class'], help='Forgetting Calculation Criteria')
+    parser.add_argument('--gpu', type=str, default='0', help="Visible GPU")
 
     args = parser.parse_args()
+    os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
+    os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
+    # torch.use_deterministic_algorithms(True)   # 目前尚不支持，需要修改
 
     main(args)
