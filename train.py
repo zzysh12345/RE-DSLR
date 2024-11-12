@@ -34,6 +34,11 @@ def main(args):
 
     # load the data
     edge_index_ori, features_ori, labels_ori, train, total_classes, partition, train_per_class, test_per_class, class_idx = load_data(args, dataset=args.dataset, classes_per_task=args.classes_per_task)
+    # train 每个task的训练节点
+    # partition 每个task的类别
+    # train_per_class 每个类别的训练节点
+    # test_per_class 每个类别的测试节点
+    # class_idx 每个类别的节点
     features = features_ori.to(device)
     labels = labels_ori.to(device)
 
@@ -83,7 +88,7 @@ def main(args):
                 test_idx_per_class[i] += test_per_class[i]
 
         #update edge index
-        edge_index = edge_masking(edge_index_ori, handled, device)
+        edge_index = edge_masking(edge_index_ori, handled, device)   # 只保留handled中的边
         
         if task == 0:
             F = features.size(1) # num_of_features
@@ -95,6 +100,8 @@ def main(args):
             # model_lp.load_state_dict(torch.load('checkpoints/%d.pt' %(task-1)))
             model_lp.load_state_dict(torch.load(f'checkpoints/{args.dataset}_{task-1}.pt'))
             if args.model == "GAT":
+                # 每次增加任务时classifier的权重和偏置都要增加维度
+                # 按照道理task-incremental应该直接更换classifier的权重和偏置
                 weight_expand = torch.rand(C,H*args.n_heads).to(device)
                 bias_expand = torch.rand(C).to(device)
                 new_weight = torch.cat((model_lp.classifier.weight, weight_expand),0)
@@ -196,7 +203,7 @@ def main(args):
 
 
 
-    if args.forget == 'task':       
+    if args.forget == 'task':
         print('Average Performance : %.2f'%(average_performance(acc)))
         print('Average Performance for last task : %.2f'%(current_performance(acc)))
         print('Forgetting Performance : %.2f'%(forget_performance(acc, args.classes_per_task, args.forget)))
