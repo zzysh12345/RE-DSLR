@@ -33,7 +33,7 @@ def main(args):
 
 
     # load the data
-    edge_index_ori, features_ori, labels_ori, train, total_classes, partition, train_per_class, test_per_class, class_idx = load_data(args, dataset = args.dataset, classes_per_task=args.classes_per_task)
+    edge_index_ori, features_ori, labels_ori, train, total_classes, partition, train_per_class, test_per_class, class_idx = load_data(args, dataset=args.dataset, classes_per_task=args.classes_per_task)
     features = features_ori.to(device)
     labels = labels_ori.to(device)
 

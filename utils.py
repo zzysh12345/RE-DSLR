@@ -24,6 +24,7 @@ def load_data(args, dataset="cora", classes_per_task=2):
     print("Dataset : {} ". format(dataset))
 
     if dataset == 'cora' or dataset == 'citeseer':
+        # 什么年代还在传统读入
 
         path="./data/"+dataset+"/" 
 
@@ -52,10 +53,10 @@ def load_data(args, dataset="cora", classes_per_task=2):
         index = list(range(len(labels)))
 
         selected_ids = sorted(selected_ids)
-        handle = [item for item in index if labels[item] in selected_ids]
+        handle = [item for item in index if labels[item] in selected_ids]   # 所有类别数大于200的节点
 
         device = torch.device('cuda:0' if(torch.cuda.is_available()) else 'cpu')
-        adj = adj_masking(adj, handle, device)
+        adj = adj_masking(adj, handle, device)   # 这里很奇怪，对归一化过的adj再进行归一化（如果每个类别都大于200则没有区别
         features = feature_masking(features, handle)
         labels = label_masking(labels, handle)
 
@@ -64,7 +65,7 @@ def load_data(args, dataset="cora", classes_per_task=2):
         sorted_ids = sorted(selected_ids)
 
         for idx in index:
-            labels[idx] = torch.tensor(sorted_ids.index(labels[idx]))
+            labels[idx] = torch.tensor(sorted_ids.index(labels[idx]))   # 这样label就按照类别数的顺序了
 
         selected_ids = list(range(len(selected_ids)))
 
@@ -76,7 +77,7 @@ def load_data(args, dataset="cora", classes_per_task=2):
 
         
         if dataset == 'cora':
-            idx_train, idx_test = train_test_split(index, test_size = 0.3, random_state=1)
+            idx_train, idx_test = train_test_split(index, test_size=0.3, random_state=1)
         elif dataset == 'citeseer':
             index_per_class = []
             for i in range(2):
@@ -104,7 +105,7 @@ def load_data(args, dataset="cora", classes_per_task=2):
 
     elif dataset == 'amazoncobuy':
         
-        Data = Amazon('./data', 'Computers')
+        Data = Amazon('data', 'Computers')
 
         index = list(range(len(Data.data.x)))
         
@@ -123,6 +124,7 @@ def load_data(args, dataset="cora", classes_per_task=2):
 
         labels_np = labels.numpy()
         label_counter = collections.Counter(labels_np)
+        # print(label_counter)
         selected_ids = [id for id, count in label_counter.items() if count > 400]
 
         selected_ids = sorted(selected_ids)
@@ -154,8 +156,7 @@ def load_data(args, dataset="cora", classes_per_task=2):
         num_classes = len(selected_ids)
 
         idx_train, idx_test = None, None
-
-        test_ratio = [0.3, 0.75, 0.65, 0.3, 0.9, 0.3, 0.4, 0.75]
+        test_ratio = [0.3, 0.75, 0.65, 0.3, 0.9, 0.3, 0.4, 0.75]   # 这些哪来的？
         for i in range(len(selected_ids)):
             class_train, class_test = train_test_split(index_per_class[i], test_size=test_ratio[i], random_state=1)
             if idx_train == None:
@@ -186,7 +187,7 @@ def load_data(args, dataset="cora", classes_per_task=2):
         matching_index_inv = {}
         for idx in range(len(handle)):
             matching_index_inv[int(handle[idx])] = torch.tensor(idx).to(device)
-        edge_index = torch.tensor([[matching_index_inv[edge[0].item()] for edge in edge_index.t()], [matching_index_inv[edge[1].item()] for edge in edge_index.t()]], dtype=torch.int64)
+        edge_index = torch.tensor([[matching_index_inv[edge[0].item()] for edge in edge_index.t()], [matching_index_inv[edge[1].item()] for edge in edge_index.t()]], dtype=torch.int64)   # 变成删掉部分类之后的idx
 
         features = feature_masking(features, handle)
         labels = label_masking(labels, handle)
